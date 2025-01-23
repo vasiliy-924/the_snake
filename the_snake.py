@@ -87,17 +87,11 @@ class Snake(GameObject):
         super().__init__(body_color)
         self.reset()
         self.direction = RIGHT
-        self.next_direction = None
 
     def update_direction(self):
         """Обновляет направление движения змейки."""
         if self.next_direction:
-            # Запрещаем движение в обратном направлении
-            if (self.next_direction == UP and self.direction != DOWN) or \
-               (self.next_direction == DOWN and self.direction != UP) or \
-               (self.next_direction == LEFT and self.direction != RIGHT) or \
-               (self.next_direction == RIGHT and self.direction != LEFT):
-                self.direction = self.next_direction
+            self.direction = self.next_direction
             self.next_direction = None
 
     def move(self):
@@ -131,6 +125,7 @@ class Snake(GameObject):
         self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
         self.lenth = 1
         self.direction = choice([UP, LEFT, DOWN, RIGHT])
+        self.next_direction = None
 
 
 class Apple(GameObject):
@@ -139,18 +134,17 @@ class Apple(GameObject):
     def __init__(self, body_color: str = APPLE_COLOR, taken_positions=None):
         """Задает цвет яблока и инициализирует его в случайное положение."""
         super().__init__(body_color)
-        self.taken_positions = taken_positions if taken_positions else []
-        self.randomize_position()
+        self.taken_positions = taken_positions or []
+        self.randomize_position(self.taken_positions)
 
-    def randomize_position(self):
+    def randomize_position(self, taken_positions):
         """Устанавливает случайное положение яблока на игровом поле."""
         while True:
-            new_position = (
+            self.position = (
                 randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                 randint(0, GRID_HEIGHT - 1) * GRID_SIZE,
             )
-            if new_position not in self.taken_positions:
-                self.position = new_position
+            if self.position not in taken_positions:
                 break
 
     def draw(self):
@@ -172,11 +166,21 @@ def handle_keys(game_object):
             elif event.key == pg.K_x:
                 SPEED += 1
             # Обновление направления с помощью словаря.
-            new_direction = DIRECTION_MAP.get(
-                (game_object.direction, event.key),
-                game_object)
-            if new_direction != game_object.direction:
-                game_object.next_direction = new_direction
+            if (game_object.direction, event.key) in DIRECTION_MAP and \
+                    DIRECTION_MAP[(
+                        game_object.direction,
+                        event.key
+                    )] != game_object.direction:
+                game_object.next_direction = DIRECTION_MAP[(
+                    game_object.direction, event.key
+                )]
+
+
+def display_message(text, size, color, position):
+    """Выводит сообщение о победе."""
+    font = pg.font.SysFont("Arial", size)  # Выбираем шрифт и размер
+    text_surface = font.render(text, True, color)  # Рендерим текст
+    screen.blit(text_surface, position)  # Отображаем текст на экране
 
 
 def main():
@@ -194,17 +198,26 @@ def main():
         snake.update_direction()
         snake.move()
 
-        # Тут опишите основную логику игры.
+        # Проверка на выигрыш
+        if len(snake.positions) >= (GRID_WIDTH * GRID_HEIGHT):
+            screen.fill(BOARD_BACKGROUND_COLOR)  # Очистить экран
+            display_message("Поздравляем, вы выиграли!",
+                            36, (255, 255, 255),
+                            (SCREEN_WIDTH // 4,
+                             SCREEN_HEIGHT // 2)
+                            )
+            pg.display.update()  # Обновить экран
+            pg.time.wait(2000)  # Задержка, чтобы игрок успел увидеть сообщение
+            break  # Врядли игрок захочет играть снова после долгой игры
+
         if snake.get_head_position() == apple.position:
             snake.lenth += 1
-            apple.taken_positions = snake.positions
-            apple.randomize_position()
+            apple.randomize_position(snake.positions)
 
-        elif snake.position in snake.positions[1:]:
+        elif snake.get_head_position() in snake.positions[1:snake.lenth]:
             snake.reset()
             screen.fill(BOARD_BACKGROUND_COLOR)
-            apple.taken_positions = snake.positions
-            apple.randomize_position()
+            apple.randomize_position(snake.positions)
 
         snake.draw()
         apple.draw()
