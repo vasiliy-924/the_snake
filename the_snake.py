@@ -178,7 +178,7 @@ def handle_keys(game_object):
 
 def display_message(text, size, color, position):
     """Выводит сообщение о победе."""
-    font = pg.font.SysFont("Arial", size)  # Выбираем шрифт и размер
+    font = pg.font.SysFont('Arial', size)  # Выбираем шрифт и размер
     text_surface = font.render(text, True, color)  # Рендерим текст
     screen.blit(text_surface, position)  # Отображаем текст на экране
 
@@ -201,7 +201,7 @@ def main():
         # Проверка на выигрыш
         if len(snake.positions) >= (GRID_WIDTH * GRID_HEIGHT):
             screen.fill(BOARD_BACKGROUND_COLOR)  # Очистить экран
-            display_message("Поздравляем, вы выиграли!",
+            display_message('Поздравляем, вы выиграли!',
                             36, (255, 255, 255),
                             (SCREEN_WIDTH // 4,
                              SCREEN_HEIGHT // 2)
