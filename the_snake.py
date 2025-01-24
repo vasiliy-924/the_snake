@@ -134,8 +134,7 @@ class Apple(GameObject):
     def __init__(self, body_color: str = APPLE_COLOR, taken_positions=None):
         """Задает цвет яблока и инициализирует его в случайное положение."""
         super().__init__(body_color)
-        self.taken_positions = taken_positions or []
-        self.randomize_position(self.taken_positions)
+        self.randomize_position(taken_positions or [])
 
     def randomize_position(self, taken_positions):
         """Устанавливает случайное положение яблока на игровом поле."""
@@ -174,6 +173,12 @@ def handle_keys(game_object):
                 game_object.next_direction = DIRECTION_MAP[(
                     game_object.direction, event.key
                 )]
+            if (game_object.direction, event.key) in DIRECTION_MAP and (
+                DIRECTION_MAP[(game_object.direction, event.key)]
+            ) != game_object.direction:
+                game_object.next_direction = DIRECTION_MAP[(
+                    game_object.direction, event.key)
+                ]
 
 
 def display_message(text, size, color, position):
